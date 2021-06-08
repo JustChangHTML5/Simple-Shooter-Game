@@ -20,6 +20,12 @@ class Bullet {
         this.pos[1] += this.velocity[1];
     }
 
+    checkIfHit(shooter) {
+        if (this.pos[0] > shooter.pos[0] && this.pos[0] < (shooter.pos[0] + shooter.size[0]) && this.pos[1] > shooter.pos[1] && this.pos[1] < (shooter.pos[1] + shooter.size[1]) {
+            shooter.hp -= this.damage;
+        }
+    }
+
 }
 
 class Shooter {
@@ -38,8 +44,8 @@ class Shooter {
         //Fire in the direction of shootX and shootY
     }
 
-    move() {
-        //Movement AI
+    update() {
+        //Movement AI and Check if ded
     }
 
     draw() {
