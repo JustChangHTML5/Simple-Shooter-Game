@@ -19,6 +19,7 @@ class Bullet {
     }
 
     move() {
+        //Update position with velocity
         if (this.pos[0] < 0 || this.pos[0] > width || this.pos[1] < 0 || this.pos[1] > height) {
             this = null;//SELF DESTRUCT
         }
@@ -27,13 +28,11 @@ class Bullet {
     }
 
     checkIfHit(shooter) {
+        //checks if hit
         if (this.pos[0] > shooter.pos[0] && this.pos[0] < (shooter.pos[0] + shooter.size[0]) && this.pos[1] > shooter.pos[1] && this.pos[1] < (shooter.pos[1] + shooter.size[1])) {
             shooter.hp -= this.damage;//take damage when hit
         }
     }
-
-    //If out of bounds, despawn
-
 }
 
 class Shooter {
@@ -51,6 +50,7 @@ class Shooter {
     }
 
     shoot(shootX, shootY) {
+        this.aim(shootX, shootY); //aim at enemy
         //Fire in the direction of shootX and shootY
     }
 
