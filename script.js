@@ -1,65 +1,81 @@
-var canvas = document.getElementById("canvas");//Canvas
-var ctx = canvas.getContext("2d");//Context
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
 
 var width = 1000;
 var height = 600;
 
-canvas.width = width;//Set Canvas size
-canvas.height = height;//Set Canvas size
+canvas.width = width;
+canvas.height = height;
 
-var bullets = [];//bullets list
-var shooters = [];//enemies list
+var bullets = [];
+var smallShooters = [];
+var bigShooters = [];
+var movingShooters = [];
+var shooters = [smallShooters, bigShooters, movingShooters];
+
+function drawRect(x, y, width, height, color) {
+    ctx.beginPath();
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, width, height);
+    ctx.stroke();
+}
+
+function rotateAtPoint(x, y, angle) {
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.translate(x * -1, y * -1);
+}
 
 class Bullet {
     constructor(posX, posY, width, height, velocityX, velocityY, strength) {
-        this.pos = [posX, posY];//Bullet position
+        this.pos = [posX, posY];
         this.velocity = [velocityX, velocityY];
-        this.size = [width, length];//Size
-        this.strength = strength; //Bullet attack strength
+        this.size = [width, length];
+        this.strength = strength;
     }
 
     move() {
-        //Update position with velocity
         if (this.pos[0] < 0 || this.pos[0] > width || this.pos[1] < 0 || this.pos[1] > height) {
-            //this = null;//SELF DESTRUCT
+            //SELF DESTRUCT
         }
-        this.pos[0] += this.velocity[0];//moveX
-        this.pos[1] += this.velocity[1];//moveY
+        this.pos[0] += this.velocity[0];
+        this.pos[1] += this.velocity[1];
     }
 
     checkIfHit(shooter) {
-        //checks if hit
         if (this.pos[0] > shooter.pos[0] && this.pos[0] < (shooter.pos[0] + shooter.size[0]) && this.pos[1] > shooter.pos[1] && this.pos[1] < (shooter.pos[1] + shooter.size[1])) {
-            shooter.hp -= this.damage;//take damage when hit
+            shooter.hp -= this.damage;
         }
     }
 }
 
 class Shooter {
-    constructor(posX, posY, width, height, hp, strength) {
-        this.pos = [posX, posY];//Shooter position
-        this.size = [width, length];//Size
-        this.hp = hp;//Shooter hp
-        this.strength = strength;//Shooter attack strength
-        this.direction = 0;//Direction
+    constructor(posX, posY, width, height, hp, strength, color) {
+        this.pos = [posX, posY];
+        this.size = [width, length];
+        this.hp = hp;
+        this.strength = strength;
+        this.direction = 0;
+        this.color = color;
     }
 
     aim(aimX, aimY) {
-        //Looks at a certain position
-        this.direction = (180 - Math.asin(Math.sqrt(Math.pow(Math.abs(aimX - this.pos[0]), 2) + Math.pow(Math.abs(aimY - this.pos[1], 2))) / Math.abs(y1 - y0))) * Math.PI / 180; //big ol pointer
+        this.direction = (180 - Math.asin(Math.sqrt(Math.pow(Math.abs(aimX - this.pos[0]), 2) + Math.pow(Math.abs(aimY - this.pos[1], 2))) / Math.abs(y1 - y0))) * Math.PI / 180;
     }
 
     shoot(shootX, shootY, bulletWidth, bulletHeight) {
-        //Fire in the direction of shootX and shootY
-        this.aim(shootX, shootY); //aim at enemy
-        let bullet = new Bullet(this.pos[0], this.pos[1], bulletWidth, bulletHeight)//bullet creating
+        this.aim(shootX, shootY);
+        let bullet = new Bullet(this.pos[0], this.pos[1], bulletWidth, bulletHeight);
     }
 
     update() {
-        //Movement AI and Check if ded
+        if (this.hp <= 0) {
+            //SELF DESTRUCT
+        }
     }
 
     draw() {
-        //Draw the Shooter
+        rotateAtPoint(this.pos[0], this.pos[1], this.direction);
+        drawRect(this.pos[0] - (this.height / 2), this.pos[1] - (this.height / 2), this.width, this.height, this.color);
     }
 }
