@@ -21,7 +21,7 @@ class Bullet {
     move() {
         //Update position with velocity
         if (this.pos[0] < 0 || this.pos[0] > width || this.pos[1] < 0 || this.pos[1] > height) {
-            this = null;//SELF DESTRUCT
+            //this = null;//SELF DESTRUCT
         }
         this.pos[0] += this.velocity[0];//moveX
         this.pos[1] += this.velocity[1];//moveY
@@ -46,12 +46,13 @@ class Shooter {
 
     aim(aimX, aimY) {
         //Looks at a certain position
-        this.direction = (180 - Math.asin(Math.sqrt(Math.pow(Math.abs(aimX - this.pos[0]), 2) + Math.pow(Math.abs(aimY - this.pos[1], 2)) / abs(y1 - y0))) * Math.PI / 180; //big ol pointer
+        this.direction = (180 - Math.asin(Math.sqrt(Math.pow(Math.abs(aimX - this.pos[0]), 2) + Math.pow(Math.abs(aimY - this.pos[1], 2))) / Math.abs(y1 - y0))) * Math.PI / 180; //big ol pointer
     }
 
-    shoot(shootX, shootY) {
-        this.aim(shootX, shootY); //aim at enemy
+    shoot(shootX, shootY, bulletWidth, bulletHeight) {
         //Fire in the direction of shootX and shootY
+        this.aim(shootX, shootY); //aim at enemy
+        let bullet = new Bullet(this.pos[0], this.pos[1], bulletWidth, bulletHeight)//bullet creating
     }
 
     update() {
