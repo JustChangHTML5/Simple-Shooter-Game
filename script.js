@@ -74,8 +74,9 @@ class Shooter {
     }
 
     shoot(shootX, shootY, bulletWidth, bulletHeight) {
+        whole = bulletX + bulletY
         this.aim(shootX, shootY);
-        let bullet = new Bullet(this.pos[0], this.pos[1], bulletWidth, bulletHeight);
+        let bullet = new Bullet(this.pos[0], this.pos[1], bulletWidth, bulletHeight, bulletX / whole, bulletY / whole, this.strength);
     }
 
     update() {
