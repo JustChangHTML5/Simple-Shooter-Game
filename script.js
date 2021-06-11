@@ -13,6 +13,15 @@ var bigShooters = [];
 var movingShooters = [];
 var shooters = [smallShooters, bigShooters, movingShooters];
 
+function deleteShooter(type, shooter) {
+    for (var i = 0; i < type.length; i++) {
+        curShooter = type[i];
+        if (curShooter == shooter) {
+            type.splice(i)
+        }
+    }
+}
+
 function drawRect(x, y, width, height, color) {
     ctx.beginPath();
     ctx.fillStyle = color;
@@ -50,13 +59,14 @@ class Bullet {
 }
 
 class Shooter {
-    constructor(posX, posY, width, height, hp, strength, color) {
+    constructor(posX, posY, width, height, hp, strength, color, type) {
         this.pos = [posX, posY];
         this.size = [width, length];
         this.hp = hp;
         this.strength = strength;
         this.direction = 0;
         this.color = color;
+        this.parent = type;
     }
 
     aim(aimX, aimY) {
@@ -70,7 +80,7 @@ class Shooter {
 
     update() {
         if (this.hp <= 0) {
-            //SELF DESTRUCT
+            deleteShooter(this.parent, this);
         }
     }
 
