@@ -79,10 +79,10 @@ class Bullet {
         }
     }
 
-    draw() {
+    draw(color) {
         ctx.beginPath();
         ctx.arc(this.pos[0], this.pos[1], this.radius, 0, 2 * Math.PI, false);
-        ctx.fillStyle = "purple";
+        ctx.fillStyle = color;
         ctx.fill();
     }
 }
@@ -150,7 +150,7 @@ function keyEvents(event, evt) {
 
 function shootAtMousePos(event) {
     var pos = getMousePos(event);
-    player.shoot(pos.x, pos.y, 3, 1);
+    player.shoot(pos.x, pos.y, 3, 5);
 }
 
 function main() {
@@ -158,7 +158,7 @@ function main() {
     for (var i = 0; i < shooters.length; i++) {
         shooters[i].draw();
         for (var j = 0; j < shooters[i].bullets.length; j++) {
-            shooters[i].bullets[j].draw();
+            shooters[i].bullets[j].draw("purple");
             shooters[i].bullets[j].move();
             for (var k = 0; k < shooters.length; k++) {
                 if (shooters[k] != shooters[i]) {
@@ -167,7 +167,7 @@ function main() {
             }
         }
     }
-    enemy.shoot(player.pos[0], player.pos[1], 3, 3)
+    enemy.shoot(player.pos[0] + (Math.random() * 20 - 10), player.pos[1] + (Math.random() * 20 - 10), 3, 7)
 }
 
 main();
