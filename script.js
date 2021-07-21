@@ -18,7 +18,7 @@ function getMousePos(event) {
     }
 }
 
-document.onkeydown = function(evt) {
+document.onkeypress = function(evt) {
     var evt = evt || window.event;
     var charCode = evt.keyCode || evt.which;
     var charStr = String.fromCharCode(charCode);
