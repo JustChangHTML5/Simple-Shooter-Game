@@ -64,7 +64,8 @@ class Bullet {
 
     move() {
         if (this.pos[0] < 0 || this.pos[0] > width || this.pos[1] < 0 || this.pos[1] > height) {
-            this.parent.bullets.pop(this.index);
+            this.index = this.parent.bullets.indexOf(this);
+            this.parent.bullets.splice(this.index, 1);
         }
         this.pos[0] -= this.velocity[0];
         this.pos[1] -= this.velocity[1];
@@ -73,14 +74,15 @@ class Bullet {
     checkIfHit(shooter) {
         if (this.pos[0] > (shooter.pos[0] - shooter.radius / 2) && this.pos[0] < (shooter.pos[0] + shooter.radius / 2) && this.pos[1] > (shooter.pos[1] - shooter.radius / 2) && this.pos[1] < (shooter.pos[1] + shooter.radius / 2)) {
             shooter.hp -= this.damage;
-            this.parent.bullets.pop(this.index);
+            this.index = this.parent.bullets.indexOf(this);
+            this.parent.bullets.splice(this.index, 1);
         }
     }
 
     draw() {
         ctx.beginPath();
         ctx.arc(this.pos[0], this.pos[1], this.radius, 0, 2 * Math.PI, false);
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "purple";
         ctx.fill();
     }
 }
@@ -97,9 +99,9 @@ class Shooter {
     }
 
     shoot(shootPosX, shootPosY, bulletRadius) {
-        var shootX = Math.abs(shootPosX - this.pos[0]);
-        var shootY = Math.abs(shootPosY - this.pos[1]);
-        var whole = shootX + shootY;
+        var shootX = this.pos[0] - shootPosX;
+        var shootY = this.pos[1] - shootPosY;
+        var whole = Math.abs(shootX) + Math.abs(shootY);
         let bullet = new Bullet(this.pos[0], this.pos[1], bulletRadius, shootX / whole, shootY / whole, this.strength, this, this.bullets.length);
         this.bullets.push(bullet);
     }
@@ -146,6 +148,11 @@ function keyEvents(event, evt) {
     }
 }
 
+function shootAtMousePos(event) {
+    var pos = getMousePos(event);
+    player.shoot(pos.x, pos.y, 3);
+}
+
 function main() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (var i = 0; i < shooters.length; i++) {
@@ -161,8 +168,6 @@ function main() {
         }
     }
 }
-
-player.shoot(2, 1, 3);
 
 main();
 
