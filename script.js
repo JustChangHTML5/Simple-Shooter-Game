@@ -98,11 +98,11 @@ class Shooter {
         this.bullets = [];
     }
 
-    shoot(shootPosX, shootPosY, bulletRadius) {
+    shoot(shootPosX, shootPosY, bulletRadius, bulletSpeed) {
         var shootX = this.pos[0] - shootPosX;
         var shootY = this.pos[1] - shootPosY;
         var whole = Math.abs(shootX) + Math.abs(shootY);
-        let bullet = new Bullet(this.pos[0], this.pos[1], bulletRadius, shootX / whole, shootY / whole, this.strength, this, this.bullets.length);
+        let bullet = new Bullet(this.pos[0], this.pos[1], bulletRadius, shootX / whole * bulletSpeed, shootY / whole * bulletSpeed, this.strength, this, this.bullets.length);
         this.bullets.push(bullet);
     }
 
@@ -150,7 +150,7 @@ function keyEvents(event, evt) {
 
 function shootAtMousePos(event) {
     var pos = getMousePos(event);
-    player.shoot(pos.x, pos.y, 3);
+    player.shoot(pos.x, pos.y, 3, 1);
 }
 
 function main() {
@@ -167,6 +167,7 @@ function main() {
             }
         }
     }
+    enemy.shoot(player.pos[0], player.pos[1], 3, 3)
 }
 
 main();
