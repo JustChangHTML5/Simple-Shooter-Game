@@ -1,5 +1,7 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
+var healthDisplay = document.getElementById("health");
+var waveDisplay = document.getElementById("wave");
 
 var width = 1000;
 var height = 600;
@@ -9,14 +11,15 @@ var fireRate = 50;
 canvas.width = width;
 canvas.height = height;
 
-var maxHp = 100;
+var maxHp = 90;
 var waveNum = 1;
-var laserNum = -4;
+var laserNum = -3;
+var laserFactor = 0;
 var spawnRadius = 100;
 var bullets = [];
 var shooters = [];
-var playerBulletRadius = 3;
-var playerBulletSpeed = 5;
+var playerBulletRadius = 2.5;
+var playerBulletSpeed = 3;
 var playerBulletErrorRate = 0;
 
 function getRandomIntInclusive(min, max) {
@@ -171,18 +174,21 @@ function shootAtMousePos(event) {
 }
 
 var reload = 0;
-
 function main() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (shooters.length == 1) {
         maxHp += 10;
         player.hp = maxHp;
         playerBulletRadius += 0.5;
-        playerBulletSpeed++;
+        playerBulletSpeed += 0.5;
         spawnEnemies(waveNum, 10, 50, 3, "red");
         waveNum++;
+        console.log(laserFactor);
+        console.log(laserNum);
+        spawnEnemies(laserFactor, 5, 70, 1, "yellow");
         if (laserNum > 0) {
-            spawnEnemies(laserNum, 5, 70, 1, "yellow")
+            laserFactor++;
+            laserNum = -3;
         } else {
             laserNum++;
         }
@@ -219,6 +225,8 @@ function main() {
     } else {
         reload--;
     }
+    healthDisplay.innerHTML = "Health: " + player.hp.toString();
+    waveDisplay.innerHTML = "Wave: " + (waveNum - 1).toString();
 
 }
 
