@@ -4,11 +4,26 @@ var ctx = canvas.getContext("2d");
 var width = 1000;
 var height = 600;
 
+var fireRate = 50;
+
 canvas.width = width;
 canvas.height = height;
 
+var maxHp = 100;
+var waveNum = 1;
+var laserNum = -4;
+var spawnRadius = 100;
 var bullets = [];
 var shooters = [];
+var playerBulletRadius = 3;
+var playerBulletSpeed = 5;
+var playerBulletErrorRate = 0;
+
+function getRandomIntInclusive(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1) + min); //The maximum is inclusive and the minimum is inclusive
+}
 
 function getMousePos(event) {
     var rect = canvas.getBoundingClientRect();
@@ -30,15 +45,6 @@ function click(event) {
     
 }
 
-function deleteShooter(type, shooter) {
-    for (var i = 0; i < type.length; i++) {
-        curShooter = type[i];
-        if (curShooter == shooter) {
-            type.splice(i);
-        }
-    }
-}
-
 function drawRect(x, y, width, height, color) {
     ctx.beginPath();
     ctx.fillStyle = color;
@@ -46,20 +52,14 @@ function drawRect(x, y, width, height, color) {
     ctx.stroke();
 }
 
-function rotateAtPoint(x, y, angle) {
-    ctx.translate(x, y);
-    ctx.rotate(angle);
-    ctx.translate(x * -1, y * -1);
-}
-
 class Bullet {
-    constructor(posX, posY, radius, velocityX, velocityY, strength, parent, index) {
+    constructor(posX, posY, radius, velocityX, velocityY, strength, parent) {
         this.pos = [posX, posY];
         this.velocity = [velocityX, velocityY];
         this.radius = radius;
         this.strength = strength;
         this.parent = parent;
-        this.index = index;
+        this.index = 0;
     }
 
     move() {
@@ -72,8 +72,9 @@ class Bullet {
     }
 
     checkIfHit(shooter) {
+        //Benevolent Hitboxes
         if (this.pos[0] > (shooter.pos[0] - shooter.radius / 2) && this.pos[0] < (shooter.pos[0] + shooter.radius / 2) && this.pos[1] > (shooter.pos[1] - shooter.radius / 2) && this.pos[1] < (shooter.pos[1] + shooter.radius / 2)) {
-            shooter.hp -= this.damage;
+            shooter.hp -= this.strength;
             this.index = this.parent.bullets.indexOf(this);
             this.parent.bullets.splice(this.index, 1);
         }
@@ -88,7 +89,7 @@ class Bullet {
 }
 
 class Shooter {
-    constructor(posX, posY, radius, hp, strength, color) {
+    constructor(posX, posY, radius, hp, strength, color, parent) {
         this.pos = [posX, posY];
         this.radius = radius;
         this.hp = hp;
@@ -96,19 +97,22 @@ class Shooter {
         this.direction = 0;
         this.color = color;
         this.bullets = [];
+        this.index = 0;
+        this.parent = parent;
     }
 
-    shoot(shootPosX, shootPosY, bulletRadius, bulletSpeed) {
+    shoot(shootPosX, shootPosY, bulletRadius, bulletSpeed, errorRate) {
         var shootX = this.pos[0] - shootPosX;
         var shootY = this.pos[1] - shootPosY;
         var whole = Math.abs(shootX) + Math.abs(shootY);
-        let bullet = new Bullet(this.pos[0], this.pos[1], bulletRadius, shootX / whole * bulletSpeed, shootY / whole * bulletSpeed, this.strength, this, this.bullets.length);
+        let bullet = new Bullet(this.pos[0], this.pos[1], bulletRadius, shootX / whole * bulletSpeed + (Math.random() * (errorRate * 2) - errorRate), shootY / whole * bulletSpeed + (Math.random() * (errorRate * 2) - errorRate), this.strength, this, this.bullets.length);
         this.bullets.push(bullet);
     }
 
     update() {
         if (this.hp <= 0) {
-            deleteShooter(this.parent, this);
+            this.index = this.parent.indexOf(this);
+            this.parent.splice(this.index, 1);
         }
     }
 
@@ -123,51 +127,99 @@ class Shooter {
 sizeX = 100;
 sizeY = 100;
 
-let player = new Shooter(canvas.width / 2, canvas.height / 2, 10, 100, 10, "blue");
-let enemy = new Shooter(1, 2, 10, 100, 10, "red");
+let player = new Shooter(canvas.width / 2 + 200, canvas.height / 2 + 200, 10, 100, 10, "blue", shooters);
 shooters.push(player);
-shooters.push(enemy)
+
+function spawnEnemies(enemyNum, radius, hp, strength, color) {
+    for (var i = 0; i < enemyNum; i++) {
+        let newEnemy = new Shooter(getRandomIntInclusive(0, canvas.width), getRandomIntInclusive(0, canvas.height), radius, hp, strength, color, shooters);
+        shooters.push(newEnemy);
+    }
+} 
 
 function keyEvents(event, evt) {
     switch(event) {
         case "w":
-            player.pos[1] -= 3;
+            if (player.pos[1] - player.radius > 0) {
+                player.pos[1] -= 3;
+            }
             break;
 
         case "a":
-            player.pos[0] -= 3;
+            if (player.pos[0] - player.radius > 0) {
+                player.pos[0] -= 3;
+            }
             break
 
         case "s":
-            player.pos[1] += 3;
+            if (player.pos[1] + player.radius < canvas.height) {
+                player.pos[1] += 3;
+            }
             break;
 
         case "d":
-            player.pos[0] += 3;
+            if (player.pos[0] + player.radius < canvas.width) {
+                player.pos[0] += 3;
+            }
             break;
     }
 }
 
 function shootAtMousePos(event) {
     var pos = getMousePos(event);
-    player.shoot(pos.x, pos.y, 3, 5);
+    player.shoot(pos.x, pos.y, playerBulletRadius, playerBulletSpeed, playerBulletErrorRate);
 }
+
+var reload = 0;
 
 function main() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (shooters.length == 1) {
+        maxHp += 10;
+        player.hp = maxHp;
+        playerBulletRadius += 0.5;
+        playerBulletSpeed++;
+        spawnEnemies(waveNum, 10, 50, 3, "red");
+        waveNum++;
+        if (laserNum > 0) {
+            spawnEnemies(laserNum, 5, 70, 1, "yellow")
+        } else {
+            laserNum++;
+        }
+    }
     for (var i = 0; i < shooters.length; i++) {
         shooters[i].draw();
+        shooters[i].update();
         for (var j = 0; j < shooters[i].bullets.length; j++) {
             shooters[i].bullets[j].draw("purple");
             shooters[i].bullets[j].move();
             for (var k = 0; k < shooters.length; k++) {
                 if (shooters[k] != shooters[i]) {
-                    shooters[i].bullets[j].checkIfHit(shooters[k]);
+                    if (j < shooters[i].bullets.length) {
+                        shooters[i].bullets[j].checkIfHit(shooters[k]);
+                    }
                 }
             }
         }
     }
-    enemy.shoot(player.pos[0] + (Math.random() * 20 - 10), player.pos[1] + (Math.random() * 20 - 10), 3, 7)
+    
+    for (var i = 0; i < shooters.length; i++) {
+        if (reload <= 0) {
+            if (shooters[i].color == "red") {
+                shooters[i].shoot(player.pos[0], player.pos[1], 5, 3, 0);
+            } 
+        }
+
+        if (shooters[i].color == "yellow") {
+            shooters[i].shoot(player.pos[0], player.pos[1], 3, 7, 0);
+        }
+    }
+    if (reload <= 0) {
+        reload = fireRate;
+    } else {
+        reload--;
+    }
+
 }
 
 main();
