@@ -8,10 +8,41 @@
     <link href="https://cdn.discordapp.com/attachments/842455558479937546/867612539047247872/unknown.png" rel="icon">
   </head>
   <body>
-      <div id="data" class="unselectable"><h1 id="health">Health: 100</h1><h1 id="wave">Wave: 1</h1></div>
-      <div id="menu" class="unselectable"><button class="controls" onclick="if (movingUp) { movingUp = false; } else { movingUp = true;  movingDown = false; }">Up</button><button class="controls" onclick="if (movingDown) { movingDown = false; } else { movingDown = true; movingUp = false; }">Down</button><button class="controls" onclick="if (movingLeft) { movingLeft = false; } else { movingLeft = true; movingRight = false; }">Left</button><button class="controls" onclick="if (movingRight) { movingRight = false; } else { movingRight = true; movingLeft = false; }">Right</button></div>
+      <div id="data" class="unselectable">
+          
+          <p id="time">Time Spent Playing: 0 Seconds</p>
+
+          <h2 id="highScoreDisplay">High Score: 0</h2><h2 id="scoreDisplay">Score: 0</h2>
+
+          <h1 id="wave">Wave: 1</h1><h1 id="health">Health: 100</h1>
+          
+          </div>
+      <div id="menu" class="unselectable">
+          
+          <button id="start" onclick="startGame()">Start Game</button>
+
+          <button class="controls" onclick="if (movingUp) { movingUp = false; } else { movingUp = true;  movingDown = false; }">Up</button>
+          
+          <button class="controls" onclick="if (movingDown) { movingDown = false; } else { movingDown = true; movingUp = false; }">Down</button>
+          
+          <button class="controls" onclick="if (movingLeft) { movingLeft = false; } else { movingLeft = true; movingRight = false; }">Left</button>
+          
+          <button class="controls" onclick="if (movingRight) { movingRight = false; } else { movingRight = true; movingLeft = false; }">Right</button>
+          
+          </div>
+
       <canvas id="canvas" onclick="shootAtMousePos(event);"></canvas>
-      <div id="Happy B-Day" class="unselectable"><h1>Happy Birthday Violet!</h1><p>Happy Birthday! Thank you for being by my side, Violet. This is a web game to show my appreciation. Controls: W, A, S, D movement (A little wonky because there is only one way to do this.), and click to shoot. If there are any problems, please tell me. Anyways, Enjoy!</p><button id="dontClickMe" onclick="var self = document.getElementById('dontClickMe'); waveNum = 100; laserFactor = 3; player.hp = 1000; maxHp = 1000; self.innerHTML = 'You clicked me... Intresting...'">Oh? What is this? You don't need to know, just don't click me! :)</button><button onclick="player.hp = -9999999;">Click me! :}</button></div>
+
+      <div id="Happy B-Day" class="unselectable">
+          <h1>Happy Birthday Violet!</h1>
+          
+          <p>Happy Birthday! Thank you for being by my side, Violet. This is a web game to show my appreciation. Controls: W, A, S, D movement (A little wonky because there is only one way to do this.), and click to shoot. If there are any problems, please tell me. Anyways, Enjoy!</p>
+          
+          <button id="dontClickMe" onclick="var self = document.getElementById('dontClickMe'); waveNum = 100; laserFactor = 3; player.hp = 1000; maxHp = 1000; self.innerHTML = 'You clicked me... Intresting...'">Oh? What is this? You don't need to know, just don't click me! :)</button>
+          
+          <button onclick="player.hp = -9999999;">Click me! :}</button>
+          
+          </div>
     <script src="script.js"></script>
   </body>
 </html>

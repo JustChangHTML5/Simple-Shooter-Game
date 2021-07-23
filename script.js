@@ -1,7 +1,14 @@
+var gameLoop = null;
+var start = document.getElementById("start");
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 var healthDisplay = document.getElementById("health");
 var waveDisplay = document.getElementById("wave");
+var scoreDisplay = document.getElementById("scoreDisplay");
+var highScoreDisplay = document.getElementById("highScoreDisplay");
+var timeDisplay = document.getElementById("time");
+
+var time = 0;
 
 var width = 1000;
 var height = 600;
@@ -16,9 +23,8 @@ var waveNum = 1;
 var laserNum = -2;
 var laserFactor = 0;
 var spawnRadius = 100;
-var bullets = [];
 var shooters = [];
-var playerBulletRadius = 2.5;
+var playerBulletRadius = 2.8;
 var playerBulletSpeed = 3;
 var playerBulletErrorRate = 0;
 var movingUp = false;
@@ -26,11 +32,36 @@ var movingDown = false;
 var movingLeft = false;
 var movingRight = false;
 var playerSpeed = 1;
+var score = 0;
+var highScore = 0;
 
 function getRandomIntInclusive(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1) + min); //The maximum is inclusive and the minimum is inclusive
+}
+
+function setCookie(cname, cvalue, exdays) {
+  var d = new Date();
+  d.setTime(d.getTime() + (exdays*24*60*60*1000));
+  var expires = "expires="+ d.toUTCString();
+  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
 }
 
 function getMousePos(event) {
@@ -85,7 +116,10 @@ class Bullet {
             shooter.hp -= this.strength;
             this.index = this.parent.bullets.indexOf(this);
             this.parent.bullets.splice(this.index, 1);
+            return true;
         }
+        
+        return false;
     }
 
     draw(color) {
@@ -132,10 +166,7 @@ class Shooter {
     }
 }
 
-sizeX = 100;
-sizeY = 100;
-
-let player = new Shooter(canvas.width / 2 + 200, canvas.height / 2 + 200, 10, 100, 10, "blue", shooters);
+let player = new Shooter(canvas.width / 2, canvas.height / 2, 10, 100, 10, "blue", shooters);
 shooters.push(player);
 
 function spawnEnemies(enemyNum, radius, hp, strength, color) {
@@ -190,21 +221,26 @@ function shootAtMousePos(event) {
     player.shoot(pos.x, pos.y, playerBulletRadius, playerBulletSpeed, playerBulletErrorRate);
 }
 
+scoreDisplay.innerHTML = "Score: " + score.toString();
+highScore = getCookie("HighScore");
+highScoreDisplay.innerHTML = "High Score: " + highScore.toString();
+
 var reload = 0;
 function main() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (shooters.length == 1) {
         maxHp += 10;
         player.hp = maxHp;
-        playerBulletRadius += 0.5;
-        playerBulletSpeed += 0.5;
+        playerBulletRadius += 0.2;
+        playerBulletSpeed += 0.2;
         spawnEnemies(waveNum, 10, 50, 3, "red");
+        spawnEnemies(Math.floor(waveNum / 3), 20, 100, 6, "white");
         waveNum++;
         playerSpeed += 0.2;
         spawnEnemies(laserFactor, 5, 70, 1, "yellow");
         if (laserNum > 0) {
             laserFactor++;
-            laserNum = -8;
+            laserNum = -3;
         } else {
             laserNum++;
         }
@@ -213,12 +249,31 @@ function main() {
         shooters[i].draw();
         shooters[i].update();
         for (var j = 0; j < shooters[i].bullets.length; j++) {
-            shooters[i].bullets[j].draw("purple");
+            shooters[i].bullets[j].draw("violet");
             shooters[i].bullets[j].move();
             for (var k = 0; k < shooters.length; k++) {
                 if (shooters[k] != shooters[i]) {
                     if (j < shooters[i].bullets.length) {
-                        shooters[i].bullets[j].checkIfHit(shooters[k]);
+                        var killed = shooters[i].bullets[j].checkIfHit(shooters[k]);
+                        if (killed) {
+                            if (shooters[k].color == "red") {
+                                score++;
+
+                            } else if (shooters[k].color == "yellow") {
+                                score += 5;
+
+                            } else if (shooters[k].color == "white") {
+                                score += 10;
+
+                            }
+                        }
+
+                        if (score > highScore) {
+                            console.log(score);
+                            console.log(highScore);
+                            highScore = score;
+                            setCookie("HighScore", highScore, 3650);
+                        }
                     }
                 }
             }
@@ -229,7 +284,9 @@ function main() {
         if (reload <= 0) {
             if (shooters[i].color == "red") {
                 shooters[i].shoot(player.pos[0], player.pos[1], 5, 3, 0);
-            } 
+            } else if (shooters[i].color == "white") {
+                shooters[i].shoot(player.pos[0], player.pos[1], 10, 2, 0)
+            }
         }
 
         if (shooters[i].color == "yellow") {
@@ -247,7 +304,6 @@ function main() {
     if (movingUp) {
         if (player.pos[1] - player.radius > 0 && player.hp >= 0) {
             player.pos[1] -= playerSpeed;
-            console.log(player.pos[1] - player.radius > 0)
         }
     }
 
@@ -270,20 +326,48 @@ function main() {
     }
 
     if (player.hp <= 0) {
-        ctx.font = '48px serif';
+        ctx.font = '48px comicsansms';
         ctx.strokeText('Game Over 游戏结束', canvas.width / 2, canvas.height / 2);
+        clearInterval(gameLoop);
     }
+
+    scoreDisplay.innerHTML = "Score: " + score.toString();
+    highScoreDisplay.innerHTML = "High Score: " + getCookie("HighScore");
+
+    time += 0.01;
+    timeDisplay.innerHTML = "Time Spent Playing: " + Math.floor(time).toString() + " Seconds"
 
 }
 
-main();
+function startGame() {
+    if (gameLoop) {
+        clearInterval(gameLoop);
+    }
+    maxHp = 90;
+    waveNum = 1;
+    laserNum = -2;
+    laserFactor = 0;
+    shooters = [];
+    playerBulletRadius = 2.8;
+    playerBulletSpeed = 2.8;
+    playerBulletErrorRate = 0;
+    movingUp = false;
+    movingDown = false;
+    movingLeft = false;
+    movingRight = false;
+    playerSpeed = 1;
 
-var gameLoop = setInterval(main, 10);
+    player.hp = 100;
+    player.pos[0] = canvas.width / 2;
+    player.pos[1] = canvas.height / 2;
+    player.strength = 10;
+    shooters.push(player);
 
+    reload = 0;
 
-
-
-
+    gameLoop = setInterval(main, 10);
+    start.innerHTML = "Restart Game";
+}
 
 
 

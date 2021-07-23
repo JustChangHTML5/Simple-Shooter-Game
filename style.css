@@ -2,12 +2,19 @@ body {
     background-color: #CCFFFF;
 }
 
+#start {
+    background-color:gold;
+}
+
 #canvas {
     background-color: green;
+    background-image: url('space.jpg');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
 }
 
 #dontClickMe {
-    background-color: gold;
+    background-color: red;
 }
 
 .unselectable {
