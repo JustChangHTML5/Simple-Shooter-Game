@@ -343,6 +343,8 @@ function startGame() {
     if (gameLoop) {
         clearInterval(gameLoop);
     }
+
+    score = 0;
     maxHp = 90;
     waveNum = 1;
     laserNum = -2;
