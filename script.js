@@ -13,7 +13,7 @@ canvas.height = height;
 
 var maxHp = 90;
 var waveNum = 1;
-var laserNum = -3;
+var laserNum = -2;
 var laserFactor = 0;
 var spawnRadius = 100;
 var bullets = [];
@@ -21,6 +21,11 @@ var shooters = [];
 var playerBulletRadius = 2.5;
 var playerBulletSpeed = 3;
 var playerBulletErrorRate = 0;
+var movingUp = false;
+var movingDown = false;
+var movingLeft = false;
+var movingRight = false;
+var playerSpeed = 1;
 
 function getRandomIntInclusive(min, max) {
   min = Math.ceil(min);
@@ -76,7 +81,7 @@ class Bullet {
 
     checkIfHit(shooter) {
         //Benevolent Hitboxes
-        if (this.pos[0] > (shooter.pos[0] - shooter.radius / 2) && this.pos[0] < (shooter.pos[0] + shooter.radius / 2) && this.pos[1] > (shooter.pos[1] - shooter.radius / 2) && this.pos[1] < (shooter.pos[1] + shooter.radius / 2)) {
+        if (this.pos[0] > (shooter.pos[0] - shooter.radius) && this.pos[0] < (shooter.pos[0] + shooter.radius) && this.pos[1] > (shooter.pos[1] - shooter.radius) && this.pos[1] < (shooter.pos[1] + shooter.radius)) {
             shooter.hp -= this.strength;
             this.index = this.parent.bullets.indexOf(this);
             this.parent.bullets.splice(this.index, 1);
@@ -143,26 +148,38 @@ function spawnEnemies(enemyNum, radius, hp, strength, color) {
 function keyEvents(event, evt) {
     switch(event) {
         case "w":
-            if (player.pos[1] - player.radius > 0) {
-                player.pos[1] -= 3;
+            if (movingUp) {
+                movingUp = false;
+            } else {
+                movingUp = true;
+                movingDown = false;
             }
             break;
 
         case "a":
-            if (player.pos[0] - player.radius > 0) {
-                player.pos[0] -= 3;
+            if (movingLeft) {
+                movingLeft = false;
+            } else {
+                movingLeft = true;
+                movingRight = false;
             }
-            break
+            break;
 
         case "s":
-            if (player.pos[1] + player.radius < canvas.height) {
-                player.pos[1] += 3;
+            if (movingDown) {
+                movingDown = false;
+            } else {
+                movingDown = true;
+                movingUp = false;
             }
             break;
 
         case "d":
-            if (player.pos[0] + player.radius < canvas.width) {
-                player.pos[0] += 3;
+            if (movingRight) {
+                movingRight = false;
+            } else {
+                movingRight = true;
+                movingLeft = false;
             }
             break;
     }
@@ -183,12 +200,11 @@ function main() {
         playerBulletSpeed += 0.5;
         spawnEnemies(waveNum, 10, 50, 3, "red");
         waveNum++;
-        console.log(laserFactor);
-        console.log(laserNum);
+        playerSpeed += 0.2;
         spawnEnemies(laserFactor, 5, 70, 1, "yellow");
         if (laserNum > 0) {
             laserFactor++;
-            laserNum = -3;
+            laserNum = -8;
         } else {
             laserNum++;
         }
@@ -227,6 +243,36 @@ function main() {
     }
     healthDisplay.innerHTML = "Health: " + player.hp.toString();
     waveDisplay.innerHTML = "Wave: " + (waveNum - 1).toString();
+    
+    if (movingUp) {
+        if (player.pos[1] - player.radius > 0 && player.hp >= 0) {
+            player.pos[1] -= playerSpeed;
+            console.log(player.pos[1] - player.radius > 0)
+        }
+    }
+
+    if (movingLeft) {
+        if (player.pos[0] - player.radius > 0 && player.hp >= 0) {
+            player.pos[0] -= playerSpeed;
+        }
+    }
+
+    if (movingDown) {
+        if (player.pos[1] + player.radius < canvas.height && player.hp >= 0) {
+            player.pos[1] += playerSpeed;
+        }
+    }
+
+    if (movingRight) {
+        if (player.pos[0] + player.radius < canvas.width && player.hp >= 0) {
+            player.pos[0] += playerSpeed;
+        }
+    }
+
+    if (player.hp <= 0) {
+        ctx.font = '48px serif';
+        ctx.strokeText('Game Over 游戏结束', canvas.width / 2, canvas.height / 2);
+    }
 
 }
 
