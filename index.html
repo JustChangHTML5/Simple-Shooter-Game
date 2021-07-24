@@ -8,6 +8,10 @@
     <link href="https://cdn.discordapp.com/attachments/842455558479937546/867612539047247872/unknown.png" rel="icon">
   </head>
   <body>
+        <audio autoplay loop>
+            <source src="Undertale__No_More_Deals.mp3" type="audio/mpeg">
+            Ur Browser not support da music.
+        </audio>
       <div id="data" class="unselectable">
           
           <p id="time">Time Spent Playing: 0 Seconds</p>
@@ -36,9 +40,9 @@
       <div id="Happy B-Day" class="unselectable">
           <h1>Happy Birthday Violet!</h1>
           
-          <p>Happy Birthday! Thank you for being by my side, Violet. This is a web game to show my appreciation. Controls: W, A, S, D movement (A little wonky because there is only one way to do this.), and click to shoot. If there are any problems, please tell me. Anyways, Enjoy!</p>
+          <p>Happy Birthday! Thank you for being by my side, Violet. This is a web game to show my appreciation. Controls: W, A, S, D movement (A little wonky because there is only one way to do this. (Don't hold down the keys)), click to shoot, and press "v" to pause. If there are any problems, please tell me. Anyways, Enjoy!</p>
           
-          <button id="dontClickMe" onclick="var self = document.getElementById('dontClickMe'); waveNum = 100; laserFactor = 3; player.hp = 1000; maxHp = 1000; self.innerHTML = 'You clicked me... Intresting...'">Oh? What is this? You don't need to know, just don't click me! :)</button>
+          <button id="dontClickMe" onclick="var self = document.getElementById('dontClickMe'); waveNum = 100; laserFactor = 3; player.hp = 1000; maxHp = 1000; clearEnemies(); self.innerHTML = 'You clicked me... Intresting...'">Oh? What is this? You don't need to know, just don't click me! :)</button>
           
           <button onclick="player.hp = -9999999;">Click me! :}</button>
           

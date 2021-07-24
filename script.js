@@ -8,6 +8,9 @@ var scoreDisplay = document.getElementById("scoreDisplay");
 var highScoreDisplay = document.getElementById("highScoreDisplay");
 var timeDisplay = document.getElementById("time");
 
+var winTime = 0;
+var isPlaying = true;
+
 var time = 0;
 
 var width = 1000;
@@ -18,6 +21,7 @@ var fireRate = 50;
 canvas.width = width;
 canvas.height = height;
 
+var regenRate = 1;
 var maxHp = 90;
 var waveNum = 1;
 var laserNum = -2;
@@ -34,6 +38,15 @@ var movingRight = false;
 var playerSpeed = 1;
 var score = 0;
 var highScore = 0;
+
+function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
+}
 
 function getRandomIntInclusive(min, max) {
   min = Math.ceil(min);
@@ -167,6 +180,10 @@ class Shooter {
 }
 
 let player = new Shooter(canvas.width / 2, canvas.height / 2, 10, 100, 10, "blue", shooters);
+function clearEnemies() {
+    shooters = [];
+    shooters.push(player);
+}
 shooters.push(player);
 
 function spawnEnemies(enemyNum, radius, hp, strength, color) {
@@ -213,6 +230,13 @@ function keyEvents(event, evt) {
                 movingLeft = false;
             }
             break;
+
+        case "v":
+            if (isPlaying) {
+                isPlaying = false;
+            } else {
+                isPlaying = true;
+            }
     }
 }
 
@@ -227,116 +251,143 @@ highScoreDisplay.innerHTML = "High Score: " + highScore.toString();
 
 var reload = 0;
 function main() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (shooters.length == 1) {
-        maxHp += 10;
-        player.hp = maxHp;
-        playerBulletRadius += 0.2;
-        playerBulletSpeed += 0.2;
-        spawnEnemies(waveNum, 10, 50, 3, "red");
-        spawnEnemies(Math.floor(waveNum / 3), 20, 100, 6, "white");
-        waveNum++;
-        playerSpeed += 0.2;
-        spawnEnemies(laserFactor, 5, 70, 1, "yellow");
-        if (laserNum > 0) {
-            laserFactor++;
-            laserNum = -3;
-        } else {
-            laserNum++;
+    if (isPlaying) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (shooters.length == 1) {
+            if (waveNum > 1) {
+                winTime = 100;
+            }
+            maxHp += 10;
+            player.hp = maxHp;
+            playerBulletRadius += 0.2;
+            playerBulletSpeed += 0.2;
+            regenRate += 0.2
+            spawnEnemies(waveNum, 10, 50, 10, "red");
+            spawnEnemies(Math.floor(waveNum / 3), 20, 100, 20, "white");
+            waveNum++;
+            playerSpeed += 0.2;
+            spawnEnemies(laserFactor, 5, 70, 1.5, "yellow");
+            if (laserNum > 0) {
+                laserFactor++;
+                laserNum = -3;
+            } else {
+                laserNum++;
+            }
         }
-    }
-    for (var i = 0; i < shooters.length; i++) {
-        shooters[i].draw();
-        shooters[i].update();
-        for (var j = 0; j < shooters[i].bullets.length; j++) {
-            shooters[i].bullets[j].draw("violet");
-            shooters[i].bullets[j].move();
-            for (var k = 0; k < shooters.length; k++) {
-                if (shooters[k] != shooters[i]) {
-                    if (j < shooters[i].bullets.length) {
-                        var killed = shooters[i].bullets[j].checkIfHit(shooters[k]);
-                        if (killed) {
-                            if (shooters[k].color == "red") {
-                                score++;
+        for (var i = 0; i < shooters.length; i++) {
+            shooters[i].draw();
+            shooters[i].update();
+            for (var j = 0; j < shooters[i].bullets.length; j++) {
+                if (shooters[i].color == "blue") {
+                    shooters[i].bullets[j].draw("lightgreen");
+                } else {
+                    shooters[i].bullets[j].draw("violet");
+                }
+                shooters[i].bullets[j].move();
+                for (var k = 0; k < shooters.length; k++) {
+                    if (shooters[k] != shooters[i]) {
+                        if (j < shooters[i].bullets.length) {
+                            var killed = shooters[i].bullets[j].checkIfHit(shooters[k]);
+                            if (killed) {
+                                if (shooters[k].color == "red") {
+                                    score++;
 
-                            } else if (shooters[k].color == "yellow") {
-                                score += 5;
+                                } else if (shooters[k].color == "yellow") {
+                                    score += 5;
 
-                            } else if (shooters[k].color == "white") {
-                                score += 10;
+                                } else if (shooters[k].color == "white") {
+                                    score += 10;
 
+                                }
                             }
-                        }
 
-                        if (score > highScore) {
-                            console.log(score);
-                            console.log(highScore);
-                            highScore = score;
-                            setCookie("HighScore", highScore, 3650);
+                            if (score > highScore) {
+                                highScore = score;
+                                setCookie("HighScore", highScore, 3650);
+                            }
                         }
                     }
                 }
             }
         }
-    }
-    
-    for (var i = 0; i < shooters.length; i++) {
+        
+        for (var i = 0; i < shooters.length; i++) {
+            if (reload <= 0) {
+                if (shooters[i].color == "red") {
+                    shooters[i].shoot(player.pos[0], player.pos[1], 5, 3, 0);
+                } else if (shooters[i].color == "white") {
+                    shooters[i].shoot(player.pos[0], player.pos[1], 10, 2, 0)
+                }
+            }
+
+            if (shooters[i].color == "yellow") {
+                shooters[i].shoot(player.pos[0], player.pos[1], 3, 7, 0);
+            }
+        }
         if (reload <= 0) {
-            if (shooters[i].color == "red") {
-                shooters[i].shoot(player.pos[0], player.pos[1], 5, 3, 0);
-            } else if (shooters[i].color == "white") {
-                shooters[i].shoot(player.pos[0], player.pos[1], 10, 2, 0)
+            if (player.hp < maxHp) {
+                player.hp = Math.floor(player.hp + regenRate);
+                if (player.hp > maxHp) {
+                    player.hp = maxHp;
+                }
+            }
+            reload = fireRate;
+        } else {
+            reload--;
+        }
+        healthDisplay.innerHTML = "Health: " + Math.floor(player.hp).toString();
+        if (player.hp >= 3 * maxHp / 4) {
+            healthDisplay.style = "color: green;";
+        } else if (player.hp < 3 * maxHp / 4 && player.hp >= maxHp / 4) {
+            healthDisplay.style = "color: orange;";
+        } else {
+            healthDisplay.style = "color: red;";
+        }
+        waveDisplay.innerHTML = "Wave: " + (waveNum - 1).toString();
+        
+        if (movingUp) {
+            if (player.pos[1] - player.radius > 0 && player.hp >= 0) {
+                player.pos[1] -= playerSpeed;
             }
         }
 
-        if (shooters[i].color == "yellow") {
-            shooters[i].shoot(player.pos[0], player.pos[1], 3, 7, 0);
+        if (movingLeft) {
+            if (player.pos[0] - player.radius > 0 && player.hp >= 0) {
+                player.pos[0] -= playerSpeed;
+            }
+        }
+
+        if (movingDown) {
+            if (player.pos[1] + player.radius < canvas.height && player.hp >= 0) {
+                player.pos[1] += playerSpeed;
+            }
+        }
+
+        if (movingRight) {
+            if (player.pos[0] + player.radius < canvas.width && player.hp >= 0) {
+                player.pos[0] += playerSpeed;
+            }
+        }
+
+        if (player.hp <= 0) {
+            ctx.font = '48px comicsansms';
+            ctx.strokeText('Game Over 游戏结束', canvas.width / 2, canvas.height / 2);
+            clearInterval(gameLoop);
+        }
+
+        scoreDisplay.innerHTML = "Score: " + score.toString();
+        highScoreDisplay.innerHTML = "High Score: " + getCookie("HighScore");
+
+        time += 0.01;
+        timeDisplay.innerHTML = "Time Spent Playing: " + Math.floor(time).toString() + " Seconds";
+
+        if (winTime > 0) {
+            ctx.fillStyle = "yellow"
+            ctx.font = '48px comicsansms';
+            ctx.fillText('You Completed Wave ' + (waveNum - 2).toString() + '!', canvas.width / 2, canvas.height / 2);
+            winTime--;
         }
     }
-    if (reload <= 0) {
-        reload = fireRate;
-    } else {
-        reload--;
-    }
-    healthDisplay.innerHTML = "Health: " + player.hp.toString();
-    waveDisplay.innerHTML = "Wave: " + (waveNum - 1).toString();
-    
-    if (movingUp) {
-        if (player.pos[1] - player.radius > 0 && player.hp >= 0) {
-            player.pos[1] -= playerSpeed;
-        }
-    }
-
-    if (movingLeft) {
-        if (player.pos[0] - player.radius > 0 && player.hp >= 0) {
-            player.pos[0] -= playerSpeed;
-        }
-    }
-
-    if (movingDown) {
-        if (player.pos[1] + player.radius < canvas.height && player.hp >= 0) {
-            player.pos[1] += playerSpeed;
-        }
-    }
-
-    if (movingRight) {
-        if (player.pos[0] + player.radius < canvas.width && player.hp >= 0) {
-            player.pos[0] += playerSpeed;
-        }
-    }
-
-    if (player.hp <= 0) {
-        ctx.font = '48px comicsansms';
-        ctx.strokeText('Game Over 游戏结束', canvas.width / 2, canvas.height / 2);
-        clearInterval(gameLoop);
-    }
-
-    scoreDisplay.innerHTML = "Score: " + score.toString();
-    highScoreDisplay.innerHTML = "High Score: " + getCookie("HighScore");
-
-    time += 0.01;
-    timeDisplay.innerHTML = "Time Spent Playing: " + Math.floor(time).toString() + " Seconds"
-
 }
 
 function startGame() {
@@ -344,7 +395,9 @@ function startGame() {
         clearInterval(gameLoop);
     }
 
+    isPlaying = true;
     score = 0;
+    regenRate = 1;
     maxHp = 90;
     waveNum = 1;
     laserNum = -2;
