@@ -8,11 +8,14 @@
     <link href="https://cdn.discordapp.com/attachments/842455558479937546/867612539047247872/unknown.png" rel="icon">
   </head>
   <body>
-        <audio autoplay loop>
-            <source src="Undertale__No_More_Deals.mp3" type="audio/mpeg">
+        <audio id="music">
+            <source src="GameMusic.mp3" type="audio/mpeg">
             Ur Browser not support da music.
         </audio>
-      <div id="data" class="unselectable">
+      <div id="game">
+          </div>
+
+        <div id="data" class="unselectable">
           
           <p id="time">Time Spent Playing: 0 Seconds</p>
 
@@ -22,29 +25,34 @@
           
           </div>
       <div id="menu" class="unselectable">
-          
-          <button id="start" onclick="startGame()">Start Game</button>
 
-          <button class="controls" onclick="if (movingUp) { movingUp = false; } else { movingUp = true;  movingDown = false; }">Up</button>
+          <button id="difficulty" class="button">Normal Mode</button>
           
-          <button class="controls" onclick="if (movingDown) { movingDown = false; } else { movingDown = true; movingUp = false; }">Down</button>
+          <button id="start" class="button" onclick="startGame()">Start Game</button>
+
+          <button id="type" class="button" >No Special Attack</button>
+
+          <button class="controls button" onclick="if (movingUp) { movingUp = false; } else { movingUp = true;  movingDown = false; }">Up</button>
           
-          <button class="controls" onclick="if (movingLeft) { movingLeft = false; } else { movingLeft = true; movingRight = false; }">Left</button>
+          <button class="controls button" onclick="if (movingDown) { movingDown = false; } else { movingDown = true; movingUp = false; }">Down</button>
           
-          <button class="controls" onclick="if (movingRight) { movingRight = false; } else { movingRight = true; movingLeft = false; }">Right</button>
+          <button class="controls button" onclick="if (movingLeft) { movingLeft = false; } else { movingLeft = true; movingRight = false; }">Left</button>
+          
+          <button class="controls button" onclick="if (movingRight) { movingRight = false; } else { movingRight = true; movingLeft = false; }">Right</button>
+
+          <button id="mute" class="button">Unmute</button>
           
           </div>
-
-      <canvas id="canvas" onclick="shootAtMousePos(event);"></canvas>
-
+          <canvas id="canvas" onclick="shootAtMousePos(event);"></canvas>
       <div id="Happy B-Day" class="unselectable">
-          <h1>Happy Birthday Violet!</h1>
           
-          <p>Happy Birthday! Thank you for being by my side, Violet. This is a web game to show my appreciation. Controls: W, A, S, D movement (A little wonky because there is only one way to do this. (Don't hold down the keys)), click to shoot, and press "v" to pause. If there are any problems, please tell me. Anyways, Enjoy!</p>
+          <p>Controls: W, A, S, D movement (A little wonky because there is only one way to do this. (Don't hold down the keys)), click to shoot, and press "v" to pause. There are four modes that ascend in difficulty, Easy Mode, Normal Mode, Hard Mode, and Extreme Mode. In Easy Mode and Hard Mode, you can shoot multiple bullets at the enemies by pressing the key, "f". In Hard Mode and Extreme Mode, the enemies dodge you bullets. You can click on the button that says No special attack to switch beetween special attacks, right click to activate them (They all have different cooldown times). The mute button mutes all sound. If there are any problems, please tell me. Anyways, Enjoy!</p>
           
-          <button id="dontClickMe" onclick="var self = document.getElementById('dontClickMe'); waveNum = 100; laserFactor = 3; player.hp = 1000; maxHp = 1000; clearEnemies(); self.innerHTML = 'You clicked me... Intresting...'">Oh? What is this? You don't need to know, just don't click me! :)</button>
+          <button id="dontClickMe" class="button" onclick="var self = document.getElementById('dontClickMe'); waveNum = 100; laserFactor = 3; player.hp = 1000; maxHp = 1000; clearEnemies(); self.innerHTML = 'You clicked me... Intresting...'">Oh? What is this? You don't need to know, just don't click me! :)</button>
           
-          <button onclick="player.hp = -9999999;">Click me! :}</button>
+          <button class="button" onclick="player.hp = -9999999;">Click me! :}</button>
+
+          <button id="colorChanger" class="button" onclick="if (google) { google = false; } else { google = true; }">Google</button>
           
           </div>
     <script src="script.js"></script>
