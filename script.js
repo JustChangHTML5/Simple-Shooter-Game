@@ -8,6 +8,7 @@ var gameLoop = null;
 var muteButton = document.getElementById("mute");
 var difficultyDisplay = document.getElementById("difficulty");
 var type = document.getElementById("type");
+var cheats = document.getElementById("cheats");
 var start = document.getElementById("start");
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
@@ -54,8 +55,8 @@ var score = 0;
 var highScore = 0;
 var google = false;
 var specialAttackType = 0;
-var specialAttackCooldowns = [2, 0.5, 2, 0];//Add more special attacks in the future.
-var specialAttackCooldownsOffset = [2, 0.5, 2, 0];//Add more special attacks in the future.
+var specialAttackCooldowns = [2, 0.5, 1, 1, 0];//Add more special attacks in the future.
+var specialAttackCooldownsOffset = [2, 0.5, 1, 1, 0];//Add more special attacks in the future.
 var map0 = [[1, 1, 10, 10], [1, 1, 3]];//array with 4 values is a rectangle, array with 3 values is a circle
 var maps = [map0];
 
@@ -121,16 +122,26 @@ type.onclick = function() {
 
         case 3:
             specialAttackType = 4;
-            type.innerHTML = "Dodge Special Movement";
-            type.style.backgroundColor = 'green';
+            type.innerHTML = "Push Special Attack";
+            type.style.backgroundColor = 'blue';
             break;
 
         case 4:
+            specialAttackType = 5;
+            type.innerHTML = "Dodge Special Attack";
+            type.style.backgroundColor = 'green';
+            break;
+
+        case 5:
             specialAttackType = 0;
             type.innerHTML = "No Special Attack";
             type.style.backgroundColor = 'white';
             break;
     }
+}
+
+cheats.onclick = function() {
+    specialAttackCooldownsOffset = [0, 0, 0, 0, 0];
 }
 
 function playShootSFX() {
@@ -269,7 +280,12 @@ canvas.addEventListener('contextmenu', function(evt) {
         }
     }  else if (specialAttackType == 4) {
         if (specialAttackCooldowns[3] >= specialAttackCooldownsOffset[3]) {
+            push(player, [pos.x, pos.y]);
             specialAttackCooldowns[3] = 0;
+        }
+    } else if (specialAttackType == 5) {
+        if (specialAttackCooldowns[4] >= specialAttackCooldownsOffset[3]) {
+            specialAttackCooldowns[4] = 0;
         }
     }
 });
@@ -318,6 +334,11 @@ class Bullet {
             return true;
         }
         return false;
+    }
+
+    deleteSelf() {
+        this.index = this.parent.bullets.indexOf(this);
+        this.parent.bullets.splice(this.index, 1);
     }
 
     draw(color) {
@@ -473,6 +494,15 @@ function calcVelocity(pos1, pos2) {
     return [shootX / whole * circle, shootY / whole * circle];
 }
 
+function push(shooter, pos) {
+    for (var i = 0; i < shooters.length; i++) {
+        for (var j = 0; j < shooters[i].bullets.length; j++) {
+            let curVel = calcVelocity(shooters[i].bullets[j].pos, pos);
+            shooters[i].bullets[j].velocity = [curVel[0] * -1, curVel[1] * -1];
+        }
+    }
+}
+
 function suck(shooter, pos) {
     for (var i = 0; i < shooters.length; i++) {
         for (var j = 0; j < shooters[i].bullets.length; j++) {
@@ -497,52 +527,70 @@ function explode(shooter, pos, radius, angleFactor, turn, bulletRadius, bulletSp
     playBoomSFX();
 }
 
+function dodgeAttack(shooter, bullet) {
+    if (shooter == player) {
+        shooter.shoot(bullet.parent.pos[0], bullet.parent.pos[1], 1, playerBulletSpeed, 0);
+    }
+}
+
 function enemyAI(shooter, bullet) {
     if (Math.dist(shooter.pos[0], shooter.pos[1], bullet.pos[0], bullet.pos[1]) <= shooter.sight) {
         if (bullet.pos[0] > shooter.pos[0]) {
             if (bullet.pos[1] > shooter.pos[1]) {
                 if (shooter.pos[0] - shooter.radius > 0) {
                     shooter.pos[0] -= shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 } if (shooter.pos[1] - shooter.radius > 0) {
                     shooter.pos[1] -= shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 }
             } else if (bullet.pos[1] < shooter.pos[1]) {
                 if (shooter.pos[0] - shooter.radius > 0) {
                     shooter.pos[0] -= shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 } if (shooter.pos[1] + shooter.radius < canvas.height) {
                     shooter.pos[1] += shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 }
             } else {
                 if (shooter.pos[0] - shooter.radius > 0) {
                     shooter.pos[0] -= shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 }
             }
         } else if (bullet.pos[0] < shooter.pos[0]) {
             if (bullet.pos[1] > shooter.pos[1]) {
                 if (shooter.pos[0] + shooter.radius < canvas.width) {
                     shooter.pos[0] += shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 } if (shooter.pos[1] - shooter.radius > 0) {
                     shooter.pos[1] -= shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 }
             } else if (bullet.pos[1] < shooter.pos[1]) {
                 if (shooter.pos[0] + shooter.radius < canvas.width) {
                     shooter.pos[0] += shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 } if (shooter.pos[1] + shooter.radius < canvas.height) {
                     shooter.pos[1] += shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 }
             } else {
                 if (shooter.pos[0] + shooter.radius < canvas.width) {
                     shooter.pos[0] += shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 }
             }
         } else {
             if (bullet.pos[1] > shooter.pos[1]) {
                 if (shooter.pos[1] - shooter.radius > 0) {
                     shooter.pos[1] -= shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 }
             } else if (bullet.pos[1] < shooter.pos[1]) {
                 if (shooter.pos[1] + shooter.radius < canvas.height) {
                     shooter.pos[1] += shooter.speed;
+                    dodgeAttack(shooter, bullet);
                 }
             }
         }
@@ -565,15 +613,17 @@ function main() {
             if (waveNum > 1) {
                 winTime = 100;
             }
-            maxHp += 10;
-            player.hp = maxHp;
-            playerBulletRadius += 0.2;
-            playerBulletSpeed += 0.2;
-            regenRate += 0.2
+            if (mode != 3) {
+                maxHp += 10;
+                player.hp = maxHp;
+                playerBulletRadius += 0.2;
+                playerBulletSpeed += 0.2;
+                regenRate += 0.2
+                playerSpeed += 0.2;
+            }
             spawnEnemies(waveNum, 10, 50, 10, "red", 1, 50);
             spawnEnemies(Math.floor(waveNum / 3), 20, 100, 30, "white", 1, 100);
             waveNum++;
-            playerSpeed += 0.2;
             spawnEnemies(laserFactor, 5, 70, 1.5, "yellow", 0, 100);
             if (laserNum > 0) {
                 laserFactor++;
@@ -587,7 +637,7 @@ function main() {
             shooters[i].draw();
             shooters[i].update();
             for (var j = 0; j < shooters[i].bullets.length; j++) {
-                if (specialAttackType == 4) {
+                if (specialAttackType == 5) {
                     if (shooters[i] != player) {
                         enemyAI(player, shooters[i].bullets[j]);
                     }
@@ -606,7 +656,9 @@ function main() {
                     if (shooters[k] != shooters[i]) {
                         if (j < shooters[i].bullets.length) {
                             if (mode == 3 || mode == 2) {
-                                enemyAI(shooters[k], shooters[i].bullets[j]);
+                                if (shooters[k] != player) {
+                                    enemyAI(shooters[k], shooters[i].bullets[j]);
+                                }
                             }
                             var killed = shooters[i].bullets[j].checkIfHit(shooters[k]);
                             if (killed) {
@@ -754,8 +806,8 @@ function startGame() {
     movingLeft = false;
     movingRight = false;
     playerSpeed = 1;
-    var specialAttackCooldowns = [2, 0.5, 2, 0];
-    var specialAttackCooldownsOffset = [2, 0.5, 2, 0];//Add more special attacks in the future.
+    var specialAttackCooldowns = [2, 0.5, 1, 1, 0];
+    var specialAttackCooldownsOffset = [2, 0.5, 1, 1, 0];//Add more special attacks in the future.
     map0 = [[1, 1], [10, 10]];
     maps = [map0];
 
