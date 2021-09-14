@@ -4,6 +4,7 @@
 //c = a + b
 //d = 1 / sqrt((a)^2 + (b)^2)
 //Move a/c*d and b/c*d
+//special attack that adds a copy of the player at the mouse
 var gameLoop = null;
 var muteButton = document.getElementById("mute");
 var difficultyDisplay = document.getElementById("difficulty");
@@ -57,7 +58,8 @@ var google = false;
 var specialAttackType = 0;
 var specialAttackCooldowns = [2, 0.5, 1, 1, 0];//Add more special attacks in the future.
 var specialAttackCooldownsOffset = [2, 0.5, 1, 1, 0];//Add more special attacks in the future.
-var map0 = [[1, 1, 10, 10], [1, 1, 3]];//array with 4 values is a rectangle, array with 3 values is a circle
+var map0 = [];//array with 4 values is a rectangle, array with 3 values is a circle
+//black norm, light blue ice, violet bouncy, red lava can burn like karma in sans fight, purple karma. (set in the last lines) green safe zone
 var maps = [map0];
 
 muteButton.onclick = function() {
@@ -297,6 +299,13 @@ function drawRect(x, y, width, height, color) {
     ctx.stroke();
 }
 
+function drawCircle(x, y, radius, color) {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+    ctx.fillStyle = color;
+    ctx.fill();
+}
+
 function makeImage(path, left, top, width, height) {
     baseImage = new Image();
     baseImage.src = path;
@@ -494,6 +503,12 @@ function calcVelocity(pos1, pos2) {
     return [shootX / whole * circle, shootY / whole * circle];
 }
 
+function spawnAlly(shooter, pos) {
+    let ally = new Shooter(pos[0], pos[1], 10, 100, 10, "green", shooters, playerSpeed, 100);
+    shooters.push(ally);
+    
+}
+
 function push(shooter, pos) {
     for (var i = 0; i < shooters.length; i++) {
         for (var j = 0; j < shooters[i].bullets.length; j++) {
@@ -598,7 +613,143 @@ function enemyAI(shooter, bullet) {
 }
 
 function mapReader(mapNum) {
-    curMap = maps[mapNum];//Map reader, can create circles, rectangles and shooters, and bomb thingys or something, idk it hasen't been made yet.
+    var curMap = maps[mapNum];//Map reader, can create circles, rectangles and shooters, and bomb thingys or something, idk it hasen't been made yet.
+    for (var i = 0; i < curMap.length; i++) {
+        var curObj = curMap[i];
+        if (curObj.length == 4) {
+            drawCircle(curObj[0], curObj[1], curObj[2], curObj[3]);
+        } else if (curObj.length == 5) {
+            if (curObj[4] == "lightgreen") {
+                ctx.globalAlpha = 0.75;
+                drawRect(curObj[0], curObj[1], curObj[2] - curObj[0], curObj[3] - curObj[1], curObj[4]);
+                ctx.globalAlpha = 1.0;
+            } else {
+                drawRect(curObj[0], curObj[1], curObj[2] - curObj[0], curObj[3] - curObj[1], curObj[4]);
+            }
+        }
+        for (var j = 0; j < shooters.length; j++) {
+            var curShooter = shooters[j];
+            if (curObj.length == 4) {
+                if (curObj[3] != "lightgreen" && curObj[3] != "red") {
+                    if (Math.dist(curShooter.pos[0], curShooter.pos[1], curObj[0], curObj[1]) < curObj[2]) {
+                        if (mode == 0) {
+                            curShooter.pos = shooters[1].pos;
+                        }
+                        curShooter.pos[0] = shooters[1].pos[0];
+                        curShooter.pos[1] = shooters[1].pos[1];
+                    }
+                }
+                if (Math.dist(curShooter.pos[0], curShooter.pos[1], curObj[0], curObj[1]) < curObj[2] + curShooter.radius) {
+                    var shootX = pos1[0] - pos2[0];
+                    var shootY = pos1[1] - pos2[1];
+                    var whole = Math.abs(shootX) + Math.abs(shootY);
+                    var circle = Math.dist(curShooter.pos[0], curShooter.pos[1], curObj[0], curObj[1]) / Math.dist(0, 0, shootX / whole, shootY / whole);
+                    curShooter.pos[0] += shootX * circle;
+                    curShooter.pos[1] += shootY * circle;
+                }
+            } else if (curObj.length == 5) {
+                if (curObj[4] != "lightgreen" && curObj[4] != "red") {
+                    if (curShooter.pos[0] > curObj[0] && curShooter.pos[0] < curObj[2]) {
+                        if (curShooter.pos[1] > curObj[1] && curShooter.pos[1] < curObj[3]) {
+                            if (mode == 0) {
+                                curShooter.pos = shooters[1].pos;
+                            }
+                            curShooter.pos[0] = shooters[1].pos[0];
+                            curShooter.pos[1] = shooters[1].pos[1];
+                        }
+                    }
+                }
+                if (curShooter.pos[0] + curShooter.radius > curObj[0] && curShooter.pos[0] - curShooter.radius < curObj[2]) {
+                    if (curShooter.pos[1] + curShooter.radius > curObj[1] && curShooter.pos[1] - curShooter.radius < curObj[3]) {
+                        if (curObj[4] == "red") {
+                            curShooter.hp--;
+                        }
+                        if (curShooter.pos[1] > curObj[1] && curShooter.pos[1] < curObj[3]) {
+                            if (curShooter.pos[0] + curShooter.radius < (curObj[2] + curObj[0]) / 2) {
+                                if (curObj[4] != "lightgreen" && curObj[4] != "red") {
+                                    curShooter.pos[0] = curObj[0] - curShooter.radius;
+                                } else {
+                                    if (curShooter.color != "blue") {
+                                        curShooter.hp = -1;
+                                    }
+                                }
+                            } else if (curShooter.pos[0] - curShooter.radius > (curObj[2] + curObj[0]) / 2) {
+                                if (curObj[4] != "lightgreen" && curObj[4] != "red") {
+                                    curShooter.pos[0] = curObj[2] + curShooter.radius;
+                                } else {
+                                    if (curShooter.color != "blue") {
+                                        curShooter.hp = -1;
+                                    }
+                                }
+                            }
+                        } else if (curShooter.pos[0] > curObj[0] && curShooter.pos[0] < curObj[2]) {
+                            if (curShooter.pos[1] + curShooter.radius < (curObj[3] + curObj[1]) / 2) {
+                                if (curObj[4] != "lightgreen" && curObj[4] != "red") {
+                                    curShooter.pos[1] = curObj[1] - curShooter.radius;
+                                } else {
+                                    if (curShooter.color != "blue") {
+                                        curShooter.hp = -1;
+                                    }
+                                }
+                            } else if (curShooter.pos[1] - curShooter.radius > (curObj[3] + curObj[1]) / 2) {
+                                if (curObj[4] != "lightgreen" && curObj[4] != "red") {
+                                    curShooter.pos[1] = curObj[3] + curShooter.radius;
+                                } else {
+                                    if (curShooter.color != "blue") {
+                                        curShooter.hp = -1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            for (var k = 0; k < curShooter.bullets.length; k++) {
+                var curBullet = curShooter.bullets[k];
+                if (curObj.length == 5) {
+                    if (curBullet.pos[0] + curBullet.radius > curObj[0] && curBullet.pos[0] - curBullet.radius < curObj[2]) {
+                        if (curBullet.pos[1] + curBullet.radius > curObj[1] && curBullet.pos[1] - curBullet.radius < curObj[3]) {
+                            if (curObj[4] == "black" || curObj[4] == "lightgreen") {
+                                curBullet.deleteSelf();
+                            } else if (curObj[4] == "lightblue") {
+                                if (curBullet.pos[1] > curObj[1] && curBullet.pos[1] < curObj[3]) {
+                                    if (curBullet.pos[0] + curBullet.radius < (curObj[2] + curObj[0]) / 2) {
+                                        curBullet.pos[0] = curObj[0] - curBullet.radius;
+                                    } else if (curBullet.pos[0] - curBullet.radius > (curObj[2] + curObj[0]) / 2) {
+                                        curBullet.pos[0] = curObj[2] + curBullet.radius;
+                                    }
+                                } else if (curBullet.pos[0] > curObj[0] && curBullet.pos[0] < curObj[2]) {
+                                    if (curBullet.pos[1] + curBullet.radius < (curObj[3] + curObj[1]) / 2) {
+                                        curBullet.pos[1] = curObj[1] - curBullet.radius;
+                                    } else if (curBullet.pos[1] - curBullet.radius > (curObj[3] + curObj[1]) / 2) {
+                                        curBullet.pos[1] = curObj[3] + curBullet.radius;
+                                    }
+                                }
+                            } else if (curObj[4] == "purple") {
+                                if (curBullet.pos[1] > curObj[1] && curBullet.pos[1] < curObj[3]) {
+                                    if (curBullet.pos[0] + curBullet.radius < (curObj[2] + curObj[0]) / 2) {
+                                        curBullet.pos[0] = curObj[0] - curBullet.radius - 1;
+                                        curBullet.velocity[0] *= -1;
+                                    } else if (curBullet.pos[0] - curBullet.radius > (curObj[2] + curObj[0]) / 2) {
+                                        curBullet.pos[0] = curObj[2] + curBullet.radius + 1;
+                                        curBullet.velocity[0] *= -1;
+                                    }
+                                } else if (curBullet.pos[0] > curObj[0] && curBullet.pos[0] < curObj[2]) {
+                                    if (curBullet.pos[1] + curBullet.radius < (curObj[3] + curObj[1]) / 2) {
+                                        curBullet.pos[1] = curObj[1] - curBullet.radius - 1;
+                                        curBullet.velocity[1] *= -1;
+                                    } else if (curBullet.pos[1] - curBullet.radius > (curObj[3] + curObj[1]) / 2) {
+                                        curBullet.pos[1] = curObj[3] + curBullet.radius + 1;
+                                        curBullet.velocity[1] *= -1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } 
+            }
+        }
+    }
 }
 
 scoreDisplay.innerHTML = "Score: " + score.toString();
@@ -782,6 +933,7 @@ function main() {
                 specialAttackCooldowns[i] += 0.01;
             }
         }
+        mapReader(0);
     }
 }
 
@@ -808,8 +960,12 @@ function startGame() {
     playerSpeed = 1;
     var specialAttackCooldowns = [2, 0.5, 1, 1, 0];
     var specialAttackCooldownsOffset = [2, 0.5, 1, 1, 0];//Add more special attacks in the future.
-    map0 = [[1, 1], [10, 10]];
+    map0 = [[0, 400, 100, 500, "black"], [100, 400, 200, 500, "lightblue"], [200, 400, 300, 500, "purple"], [300, 400, 400, 500, "lightgreen"], [400, 400, 500, 500, "red"], [500, 400, 600, 500, "orange"], [[100, 100, 200, 200], 300, 300, "white", "48px", "hello"]];
     maps = [map0];
+
+    //demo: [0, 300, 100, 400, "black"], [100, 300, 200, 400, "lightblue"], [200, 300, 300, 400, "purple"], [300, 300, 400, 400, "lightgreen"], [400, 300, 500, 400, "red"], 
+
+    //boing: [0, 0, 50, 600, "purple"], [0, 0, 1000, 50, "purple"], [950, 0, 1000, 600, "purple"], [0, 550, 1000, 600, "purple"], 
 
     player.hp = 100;
     player.pos[0] = canvas.width / 2;
