@@ -319,7 +319,7 @@ canvas.addEventListener('contextmenu', function(evt) {
         if (specialAttackCooldowns[6] >= specialAttackCooldownsOffset[6]) {
             var pos = getMousePos(event);
             for (var i = 0; i < 100; i++) {
-                player.shoot(pos.x, pos.y, playerBulletRadius, playerBulletSpeed + 3, playerBulletErrorRate + 2);
+                player.shoot(pos.x, pos.y, playerBulletRadius, playerBulletSpeed + 3, playerBulletErrorRate + 0.5);
             }
             specialAttackCooldowns[6] = 0;
         }
