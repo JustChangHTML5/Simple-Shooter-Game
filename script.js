@@ -53,14 +53,15 @@ var movingLeft = false;
 var movingRight = false;
 var playerSpeed = 1;
 var score = 0;
+var cheatsOn = false;
 var highScore = 0;
 var google = false;
 var specialAttackType = 0;
-var specialAttackCooldowns = [2, 0.5, 1, 1, 0];//Add more special attacks in the future.
-var specialAttackCooldownsOffset = [2, 0.5, 1, 1, 0];//Add more special attacks in the future.
+var specialAttackCooldowns = [2, 0.5, 1, 1, 0, 0., 1.5];//Add more special attacks in the future.
+var specialAttackCooldownsOffset = [2, 0.5, 1, 1, 0, 0.1, 1.5];//Add more special attacks in the future.
 var map0 = [];//array with 4 values is a rectangle, array with 3 values is a circle
 //black norm, light blue ice, violet bouncy, red lava can burn like karma in sans fight, purple karma. (set in the last lines) green safe zone
-var maps = [map0];
+//var maps = [map0];
 
 muteButton.onclick = function() {
     if (muted) {
@@ -135,6 +136,18 @@ type.onclick = function() {
             break;
 
         case 5:
+            specialAttackType = 6;
+            type.innerHTML = "Aimbot Special Attack";
+            type.style.backgroundColor = 'purple';
+            break;
+
+        case 6:
+            specialAttackType = 7;
+            type.innerHTML = "Shotgun";
+            type.style.backgroundColor = 'magenta';
+            break;
+            
+        case 7:
             specialAttackType = 0;
             type.innerHTML = "No Special Attack";
             type.style.backgroundColor = 'white';
@@ -143,7 +156,8 @@ type.onclick = function() {
 }
 
 cheats.onclick = function() {
-    specialAttackCooldownsOffset = [0, 0, 0, 0, 0];
+    specialAttackCooldownsOffset = [0, 0, 0, 0, 0, 0, 0];
+    cheatsOn = true;
 }
 
 function playShootSFX() {
@@ -196,6 +210,11 @@ function playMusic() {
 
 function pauseMusic() {
     gameMusic.pause();
+}
+
+function regulate(x, y, reg) {
+    var pythdist = reg / Math.sqrt(x**2 + y**2);
+    return [x * pythdist, y * pythdist];
 }
 
 Math.dist=function(x1,y1,x2,y2){ 
@@ -289,7 +308,22 @@ canvas.addEventListener('contextmenu', function(evt) {
         if (specialAttackCooldowns[4] >= specialAttackCooldownsOffset[3]) {
             specialAttackCooldowns[4] = 0;
         }
-    }
+    } else if (specialAttackType == 6) {
+        if (specialAttackCooldowns[5] >= specialAttackCooldownsOffset[5]) {
+            var pos = getMousePos(event);
+            player.shoot(pos.x, pos.y, playerBulletRadius + 3, playerBulletSpeed, playerBulletErrorRate);
+            player.bullets[player.bullets.length - 1].setboomerang();
+            specialAttackCooldowns[5] = 0;
+        }
+    } else if (specialAttackType == 7) {
+        if (specialAttackCooldowns[6] >= specialAttackCooldownsOffset[6]) {
+            var pos = getMousePos(event);
+            for (var i = 0; i < 100; i++) {
+                player.shoot(pos.x, pos.y, playerBulletRadius, playerBulletSpeed + 3, playerBulletErrorRate + 2);
+            }
+            specialAttackCooldowns[6] = 0;
+        }
+    } 
 });
 
 function drawRect(x, y, width, height, color) {
@@ -322,12 +356,15 @@ class Bullet {
         this.strength = strength;
         this.parent = parent;
         this.index = 0;
+        this.boomer = false;
     }
 
     move() {
-        if (this.pos[0] < 0 || this.pos[0] > width || this.pos[1] < 0 || this.pos[1] > height) {
-            this.index = this.parent.bullets.indexOf(this);
-            this.parent.bullets.splice(this.index, 1);
+        if (this.pos[0] < 0 || this.pos[0] > width || this.pos[1] < 0 || this.pos[1] > height) {    
+            if (this.boomer == false) {
+                this.index = this.parent.bullets.indexOf(this);
+                this.parent.bullets.splice(this.index, 1);
+            }
         }
         this.pos[0] -= this.velocity[0];
         this.pos[1] -= this.velocity[1];
@@ -355,6 +392,18 @@ class Bullet {
         ctx.arc(this.pos[0], this.pos[1], this.radius, 0, 2 * Math.PI, false);
         ctx.fillStyle = color;
         ctx.fill();
+    }
+
+    boomerang(pos) {
+        var movement = regulate(pos[0] - this.pos[0], pos[1] - this.pos[1], 0.05);
+        this.velocity[0] -= movement[0];
+        this.velocity[1] -= movement[1];
+        this.velocity[0] *= 0.99
+        this.velocity[1] *= 0.99
+    }
+
+    setboomerang() {
+        this.boomer = true;
     }
 }
 
@@ -546,72 +595,38 @@ function dodgeAttack(shooter, bullet) {
     if (shooter == player) {
         shooter.shoot(bullet.parent.pos[0], bullet.parent.pos[1], 1, playerBulletSpeed, 0);
     }
-}
+}//this is wayyyyy too op
 
 function enemyAI(shooter, bullet) {
-    if (Math.dist(shooter.pos[0], shooter.pos[1], bullet.pos[0], bullet.pos[1]) <= shooter.sight) {
-        if (bullet.pos[0] > shooter.pos[0]) {
-            if (bullet.pos[1] > shooter.pos[1]) {
-                if (shooter.pos[0] - shooter.radius > 0) {
-                    shooter.pos[0] -= shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                } if (shooter.pos[1] - shooter.radius > 0) {
-                    shooter.pos[1] -= shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                }
-            } else if (bullet.pos[1] < shooter.pos[1]) {
-                if (shooter.pos[0] - shooter.radius > 0) {
-                    shooter.pos[0] -= shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                } if (shooter.pos[1] + shooter.radius < canvas.height) {
-                    shooter.pos[1] += shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                }
-            } else {
-                if (shooter.pos[0] - shooter.radius > 0) {
-                    shooter.pos[0] -= shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                }
-            }
-        } else if (bullet.pos[0] < shooter.pos[0]) {
-            if (bullet.pos[1] > shooter.pos[1]) {
-                if (shooter.pos[0] + shooter.radius < canvas.width) {
-                    shooter.pos[0] += shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                } if (shooter.pos[1] - shooter.radius > 0) {
-                    shooter.pos[1] -= shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                }
-            } else if (bullet.pos[1] < shooter.pos[1]) {
-                if (shooter.pos[0] + shooter.radius < canvas.width) {
-                    shooter.pos[0] += shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                } if (shooter.pos[1] + shooter.radius < canvas.height) {
-                    shooter.pos[1] += shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                }
-            } else {
-                if (shooter.pos[0] + shooter.radius < canvas.width) {
-                    shooter.pos[0] += shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                }
-            }
-        } else {
-            if (bullet.pos[1] > shooter.pos[1]) {
-                if (shooter.pos[1] - shooter.radius > 0) {
-                    shooter.pos[1] -= shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                }
-            } else if (bullet.pos[1] < shooter.pos[1]) {
-                if (shooter.pos[1] + shooter.radius < canvas.height) {
-                    shooter.pos[1] += shooter.speed;
-                    dodgeAttack(shooter, bullet);
-                }
-            }
+    //detectnif we should care about the bullet
+    
+    var dodgeRange = 50;
+    if (Math.dist(bullet.pos[0], bullet.pos[1], shooter.pos[0], shooter.pos[1]) <= dodgeRange) {
+        var slope = -1 * bullet.velocity[0] / bullet.velocity[1];
+        var constant = shooter.pos[1] - slope * shooter.pos[0]; //ha lol var constant lmao
+        var slope2 = bullet.velocity[1] / bullet.velocity[0];
+        var constant2 = bullet.pos[1] - slope2 * bullet.pos[0];
+        var xPoint = (constant2 - constant) / (slope - slope2);
+        var yPoint = xPoint * slope + constant;
+        xLen = shooter.pos[0] - xPoint;
+        yLen = shooter.pos[1] - yPoint;
+        var movement = regulate(xLen, yLen, 3);
+        if (isFinite(movement[0]) && isFinite(movement[1])) {
+            shooter.pos[0] += movement[0];
+            shooter.pos[1] += movement[1];
+        }
+        if (Math.abs(shooter.pos[0] - width / 2) + shooter.radius >= width / 2) {
+            shooter.pos[0] -= movement[0];
+        } if (Math.abs(shooter.pos[1] - height / 2) + shooter.radius >= height / 2) {
+            shooter.pos[1] -= movement[1];
+        }
+        if (cheatsOn) {
+            dodgeAttack(shooter, bullet);
         }
     }
 }
 
+/*
 function mapReader(mapNum) {
     var curMap = maps[mapNum];//Map reader, can create circles, rectangles and shooters, and bomb thingys or something, idk it hasen't been made yet.
     for (var i = 0; i < curMap.length; i++) {
@@ -750,7 +765,7 @@ function mapReader(mapNum) {
             }
         }
     }
-}
+}*/
 
 scoreDisplay.innerHTML = "Score: " + score.toString();
 highScore = getCookie("HighScore");
@@ -802,7 +817,18 @@ function main() {
                 } else if (shooters[i].color == "yellow") {
                     shooters[i].bullets[j].draw("red");
                 }
-                shooters[i].bullets[j].move();
+                if (shooters[i].bullets[j].boomer == false) {
+                    shooters[i].bullets[j].move();  
+                } else {
+                    shooters[i].bullets[j].move();
+                    var shortest = [10000, 10000];
+                    for (var k = 0; k < shooters.length; k++) {
+                        if (shooters[k] != player && Math.dist(shooters[k].pos[0], shooters[k].pos[1], shooters[i].bullets[j].pos[0], shooters[i].bullets[j].pos[1]) <= Math.dist(shortest[0], shortest[1], shooters[i].bullets[j].pos[0], shooters[i].bullets[j].pos[1])) {
+                            shortest = [shooters[k].pos[0], shooters[k].pos[1]];
+                        }
+                    }
+                    shooters[i].bullets[j].boomerang(shortest);
+                }
                 for (var k = 0; k < shooters.length; k++) {
                     if (shooters[k] != shooters[i]) {
                         if (j < shooters[i].bullets.length) {
@@ -933,7 +959,7 @@ function main() {
                 specialAttackCooldowns[i] += 0.01;
             }
         }
-        mapReader(0);
+        //mapReader(0);
     }
 }
 
@@ -961,7 +987,7 @@ function startGame() {
     var specialAttackCooldowns = [2, 0.5, 1, 1, 0];
     var specialAttackCooldownsOffset = [2, 0.5, 1, 1, 0];//Add more special attacks in the future.
     map0 = [[0, 400, 100, 500, "black"], [100, 400, 200, 500, "lightblue"], [200, 400, 300, 500, "purple"], [300, 400, 400, 500, "lightgreen"], [400, 400, 500, 500, "red"], [500, 400, 600, 500, "orange"], [[100, 100, 200, 200], 300, 300, "white", "48px", "hello"]];
-    maps = [map0];
+    //maps = [map0];
 
     //demo: [0, 300, 100, 400, "black"], [100, 300, 200, 400, "lightblue"], [200, 300, 300, 400, "purple"], [300, 300, 400, 400, "lightgreen"], [400, 300, 500, 400, "red"], 
 
