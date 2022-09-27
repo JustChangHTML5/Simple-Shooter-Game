@@ -57,8 +57,8 @@ var cheatsOn = false;
 var highScore = 0;
 var google = false;
 var specialAttackType = 0;
-var specialAttackCooldowns = [2, 0.5, 1, 1, 0, 0., 1.5];//Add more special attacks in the future.
-var specialAttackCooldownsOffset = [2, 0.5, 1, 1, 0, 0.1, 1.5];//Add more special attacks in the future.
+var specialAttackCooldowns = [2, 0.5, 1, 1, 0, 0.1, 1.5, 0.1];//Add more special attacks in the future.
+var specialAttackCooldownsOffset = [2, 0.5, 1, 1, 0, 0.1, 1.5, 0.1];//Add more special attacks in the future.
 var map0 = [];//array with 4 values is a rectangle, array with 3 values is a circle
 //black norm, light blue ice, violet bouncy, red lava can burn like karma in sans fight, purple karma. (set in the last lines) green safe zone
 //var maps = [map0];
@@ -146,8 +146,14 @@ type.onclick = function() {
             type.innerHTML = "Shotgun";
             type.style.backgroundColor = 'magenta';
             break;
-            
+
         case 7:
+            specialAttackType = 8;
+            type.innerHTML = "bro ur hacking";
+            type.style.backgroundColor = 'lightgreen';
+            break;
+            
+        case 8:
             specialAttackType = 0;
             type.innerHTML = "No Special Attack";
             type.style.backgroundColor = 'white';
@@ -280,6 +286,8 @@ canvas.addEventListener('click', function(evt) {
     var pos = getMousePos(event);  
 });
 
+document.addEventListener('contextmenu', event => event.preventDefault());
+
 canvas.addEventListener('contextmenu', function(evt) {
     evt.preventDefault();
     var pos = getMousePos(event);
@@ -323,7 +331,15 @@ canvas.addEventListener('contextmenu', function(evt) {
             }
             specialAttackCooldowns[6] = 0;
         }
-    } 
+    } else if (specialAttackType == 8) {
+        var pos = getMousePos(event);
+        for (var i = 0; i < 5; i++) {
+            var pos = getMousePos(event);
+            player.shoot(pos.x, pos.y, playerBulletRadius + 3, playerBulletSpeed, playerBulletErrorRate + 5);
+            player.bullets[player.bullets.length - 1].setboomerang();
+            specialAttackCooldowns[5] = 0;
+        }
+    }
 });
 
 function drawRect(x, y, width, height, color) {
@@ -534,6 +550,63 @@ function keyEvents(event, evt) {
                     if (enemy.color != "blue") {
                         player.shoot(enemy.pos[0], enemy.pos[1], Math.ceil(playerBulletRadius / (shooters.length - 1)), playerBulletSpeed, playerBulletErrorRate);
                     }
+                }
+            }
+            break;
+
+        case "•":
+            score *= score
+
+        case "o":
+            var pos = [10000, 10000];
+            for (var i = 0; i < shooters.length; i++) {
+                if (shooters[i] != player && Math.dist(shooters[i].pos[0], shooters[i].pos[1], player.pos[0], player.pos[1]) <= Math.dist(pos[0], pos[1], player.pos[0], player.pos[1])) {
+                    pos = [shooters[i].pos[0], shooters[i].pos[1]];
+                }
+            }
+            
+            if (specialAttackType == 1) {
+                if (specialAttackCooldowns[0] >= specialAttackCooldownsOffset[0]) {
+                    explode(player, [pos[0], pos[1]], 100, 3, 0, 3, 1, 0);//Only certain modes, only certain places, cooldown
+                    specialAttackCooldowns[0] = 0;
+                }
+            } else if (specialAttackType == 2) {
+                if (specialAttackCooldowns[1] >= specialAttackCooldownsOffset[1]) {
+                    teleport(player, [pos[0], pos[1]]);//Only certain modes, only certain places, cooldown
+                    specialAttackCooldowns[1] = 0;
+                }
+            } else if (specialAttackType == 3) {
+                if (specialAttackCooldowns[2] >= specialAttackCooldownsOffset[2]) {
+                    suck(player, [pos[0], pos[1]]);
+                    specialAttackCooldowns[2] = 0;
+                }
+            }  else if (specialAttackType == 4) {
+                if (specialAttackCooldowns[3] >= specialAttackCooldownsOffset[3]) {
+                    push(player, [pos[0], pos[1]]);
+                    specialAttackCooldowns[3] = 0;
+                }
+            } else if (specialAttackType == 5) {
+                if (specialAttackCooldowns[4] >= specialAttackCooldownsOffset[3]) {
+                    specialAttackCooldowns[4] = 0;
+                }
+            } else if (specialAttackType == 6) {
+                if (specialAttackCooldowns[5] >= specialAttackCooldownsOffset[5]) {
+                    player.shoot(pos[0], pos[1], playerBulletRadius + 3, playerBulletSpeed, playerBulletErrorRate);
+                    player.bullets[player.bullets.length - 1].setboomerang();
+                    specialAttackCooldowns[5] = 0;
+                }
+            } else if (specialAttackType == 7) {
+                if (specialAttackCooldowns[6] >= specialAttackCooldownsOffset[6]) {
+                    for (var i = 0; i < 100; i++) {
+                        player.shoot(pos[0], pos[1], playerBulletRadius, playerBulletSpeed + 3, playerBulletErrorRate + 0.5);
+                    }
+                    specialAttackCooldowns[6] = 0;
+                }
+            } else if (specialAttackType == 8) {
+                for (var i = 0; i < 5; i++) {
+                    player.shoot(pos[0], pos[1], playerBulletRadius, playerBulletSpeed, playerBulletErrorRate + 5);
+                    player.bullets[player.bullets.length - 1].setboomerang();
+                    specialAttackCooldowns[5] = 0;
                 }
             }
     }
@@ -803,7 +876,7 @@ function main() {
             shooters[i].draw();
             shooters[i].update();
             for (var j = 0; j < shooters[i].bullets.length; j++) {
-                if (specialAttackType == 5) {
+                if (specialAttackType == 5 || specialAttackType == 8) {
                     if (shooters[i] != player) {
                         enemyAI(player, shooters[i].bullets[j]);
                     }
